@@ -7,49 +7,28 @@ use App\Models\Booking;
 use App\Models\Field;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use App\Models\Payment;
 
 class ReportController extends Controller
 {
-    public function dailyReport(Request $request)
-    {
-        $date = $request->date ?? Carbon::today()->toDateString();
-        $dayOfWeek = Carbon::parse($date)->dayOfWeek;
+public function dailyReport(Request $request)
+{
+    $date = $request->date ?? \Carbon\Carbon::today()->toDateString();
 
-        // جلب حجوزات اليوم (عادية وثابتة) مع بيانات الملاعب وأسعارها
-        $bookings = Booking::with(['field.prices'])
-            ->where(function ($query) use ($date, $dayOfWeek) {
-                $query->where('booking_date', $date)
-                      ->orWhere(function ($q) use ($dayOfWeek) {
-                          $q->where('is_constant', 1)
-                            ->where('day_of_week', $dayOfWeek);
-                      });
-            })->get();
+    // أهم حاجة هنا الـ with('booking.field') عشان تجيب بيانات الحجز والملعب مع بعض
+    $payments = \App\Models\Payment::with(['booking.field'])
+        ->whereDate('paid_at', $date)
+        ->get();
 
-        $totalDeposit = 0;
-        $totalRemaining = 0;
+    $totalCashIn = $payments->sum('amount');
+    $bookingsCount = $payments->pluck('booking_id')->unique()->count();
 
-        foreach ($bookings as $booking) {
-            $totalDeposit += $booking->deposit;
-
-            // حساب سعر الساعة بناءً على وقت الحجز من جدول الأسعار
-            $priceEntry = $booking->field->prices
-                ->where('from_time', '<=', $booking->start_time)
-                ->where('to_time', '>', $booking->start_time)
-                ->first();
-
-            $totalPrice = $priceEntry ? $priceEntry->price : 0;
-            $totalRemaining += ($totalPrice - $booking->deposit);
-            
-            // إضافة حقل محسوب لكل حجز لعرضه في الجدول
-            $booking->remaining = ($totalPrice - $booking->deposit);
-        }
-
-        return view('admin.reports.daily', [
-            'date' => $date,
-            'bookingsCount' => $bookings->count(),
-            'totalDeposit' => $totalDeposit,
-            'totalRemaining' => $totalRemaining,
-            'details' => $bookings
-        ]);
-    }
+    return view('admin.reports.daily', [
+        'date'           => $date,
+        'details'        => $payments, // بنبعتها كـ details عشان التوافق مع الـ View
+        'bookingsCount'  => $bookingsCount,
+        'totalDeposit'   => $totalCashIn,
+        'totalRemaining' => 0, // الخزنة مش بتهتم بالمتبقي "المستقبلي" بل بـ "اللي دخل فعلاً"
+    ]);
+}
 }

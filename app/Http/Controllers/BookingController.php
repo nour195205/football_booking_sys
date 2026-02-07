@@ -7,6 +7,7 @@ use App\Models\Field;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Models\Payment;
 
 class BookingController extends Controller
 {
@@ -40,29 +41,31 @@ class BookingController extends Controller
     }
 
     // تنفيذ الحجز
-   public function store(Request $request)
+   
+   
+   
+   
+   
+   
+   
+ public function store(Request $request)
 {
-    // 1. التحقق من البيانات المرسلة
+    // 1. التحقق من البيانات
     $request->validate([
         'field_id'     => 'required|exists:fields,id',
         'user_name'    => 'required|string|max:255',
         'start_time'   => 'required',
         'booking_date' => 'required|date',
-        'deposit'      => 'nullable|numeric|min:0',
+        'deposit'      => 'nullable|numeric|min:0', // العربون اللي هيدفعه دلوقتي
     ]);
 
     try {
-        // 2. استخدام الـ Transaction لضمان سلامة البيانات
         return \DB::transaction(function () use ($request) {
             
             $dayOfWeek = \Carbon\Carbon::parse($request->booking_date)->dayOfWeek;
-            
-            // حساب وقت النهاية تلقائياً (ساعة بعد البداية)
             $endTime = \Carbon\Carbon::parse($request->start_time)->addHour()->toTimeString();
 
-            // 3. فحص التعارض مع استخدام lockForUpdate
-            // الـ Lock ده بيخلي أي عملية تانية تحاول تفحص نفس الموعد "تستنى" لما دي تخلص
-            
+            // 2. منع الحجز المزدوج (القفل السحري)
             $alreadyBooked = \App\Models\Booking::where('field_id', $request->field_id)
                 ->where('start_time', $request->start_time)
                 ->where(function ($query) use ($request, $dayOfWeek) {
@@ -72,32 +75,42 @@ class BookingController extends Controller
                                 ->where('day_of_week', $dayOfWeek);
                           });
                 })
-                ->lockForUpdate() // <--- القفل السحري هنا لمنع الحجز المزدوج
+                ->lockForUpdate()
                 ->exists();
 
             if ($alreadyBooked) {
-                // لو الموعد اتخطف في الأجزاء من الثانية اللي فاتت
-                return back()->withInput()->with('error', 'عذراً، هذا الموعد تم حجزه للتو! يرجى اختيار موعد آخر.');
+                return back()->withInput()->with('error', 'عذراً، هذا الموعد تم حجزه للتو!');
             }
 
-            // 4. تنفيذ الحجز الفعلي
-            \App\Models\Booking::create([
+            // 3. إنشاء الحجز (بدون تخزين العربون في جدول الـ bookings نفسه لو حابب تتبع النظام الجديد)
+            // ملاحظة: يُفضل الاحتفاظ بـ deposit في جدول الحجز كمرجع سريع، لكن العمليات المحاسبية هتكون من جدول المدفوعات
+            $booking = \App\Models\Booking::create([
                 'field_id'     => $request->field_id,
                 'user_name'    => $request->user_name,
                 'start_time'   => $request->start_time,
                 'end_time'     => $endTime,
                 'booking_date' => $request->booking_date,
-                'deposit'      => $request->deposit ?? 0,
+                'deposit'      => $request->deposit ?? 0, 
                 'is_constant'  => $request->has('is_constant') ? 1 : 0,
                 'day_of_week'  => $dayOfWeek,
             ]);
 
-            return back()->with('success', 'تم الحجز بنجاح بنظام الحماية!');
+            // 4. السحر هنا: تسجيل العربون في "يومية الخزنة" بتاريخ النهاردة
+            if ($request->deposit > 0) {
+                // بنفترض إن عندك موديل اسمه Payment مرتبط بجدول الـ payments
+                \App\Models\Payment::create([
+                    'booking_id'   => $booking->id,
+                    'amount'       => $request->deposit,
+                    'paid_at'      => \Carbon\Carbon::today(), // تاريخ اللحظة اللي الآدمن قبض فيها الفلوس
+                    'note'         => 'عربون حجز لموعد بتاريخ: ' . $request->booking_date,
+                ]);
+            }
+
+            return back()->with('success', 'تم تسجيل الحجز وإضافة العربون للخزنة بنجاح!');
         });
 
     } catch (\Exception $e) {
-        // في حالة حدوث أي خطأ غير متوقع في السيرفر
-        return back()->withInput()->with('error', 'حدث خطأ أثناء معالجة الحجز، حاول مرة أخرى.');
+        return back()->withInput()->with('error', 'حدث خطأ: ' . $e->getMessage());
     }
 }
 
@@ -124,4 +137,22 @@ public function update(Request $request, $id)
         Booking::findOrFail($id)->delete();
         return back()->with('success', 'تم إلغاء الحجز');
     }
+
+
+    public function collectRemaining(Request $request, $bookingId)
+{
+    $request->validate([
+        'amount_paid' => 'required|numeric|min:1'
+    ]);
+
+    // تسجيل العملية في الخزنة بتاريخ "دلوقتي"
+    \App\Models\Payment::create([
+        'booking_id' => $bookingId,
+        'amount'     => $request->amount_paid,
+        'paid_at'    => \Carbon\Carbon::today(), // ده اللي هيخليها تظهر في تقرير النهاردة
+        'note'       => 'تحصيل باقي مبلغ الحجز',
+    ]);
+
+    return back()->with('success', 'تم تحصيل المبلغ وإضافته لتقرير اليوم!');
+}
 }

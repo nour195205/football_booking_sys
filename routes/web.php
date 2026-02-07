@@ -56,6 +56,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/get-slots', [BookingController::class, 'getSlotsHtml'])->name('admin.getSlots');
     Route::post('/bookings', [BookingController::class, 'store'])->name('admin.bookings.store');
     Route::delete('/bookings/{id}', [BookingController::class, 'destroy'])->name('admin.bookings.destroy');
+    // ضيف السطر ده جوه مجموعة الـ Admin أو الـ Auth
+Route::put('/bookings/{id}', [App\Http\Controllers\BookingController::class, 'update'])->name('admin.bookings.update');
+
+    Route::post('/admin/bookings/{id}/collect', [BookingController::class, 'collectRemaining'])->name('admin.bookings.collect');
 });
 
 

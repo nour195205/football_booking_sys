@@ -3,54 +3,14 @@
 @section('content')
 <style>
     body { background-color: #f8f9fa; font-family: 'Cairo', sans-serif; }
-    
-    /* منع التمرير الأفقي للصفحة بالكامل */
     .container-fluid { overflow-x: hidden; padding-left: 10px; padding-right: 10px; }
-
-    /* تصميم كروت الملاعب بشكل أفقي للموبايل */
-    .fields-scroller {
-        display: flex;
-        overflow-x: auto;
-        gap: 12px;
-        padding: 10px 5px;
-        scroll-snap-type: x mandatory;
-        -webkit-overflow-scrolling: touch;
-    }
-    .field-card {
-        min-width: 85%; /* يظهر كارت واحد وجزء من الثاني لتحفيز السحب */
-        scroll-snap-align: start;
-        border-radius: 15px !important;
-        transition: 0.3s;
-        border: 2px solid transparent !important;
-    }
-    .selected-field {
-        border-color: #0d6efd !important;
-        background-color: #f0f7ff !important;
-        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.15) !important;
-    }
-
-    /* تحسين قائمة الأسعار داخل الكارت */
+    .fields-scroller { display: flex; overflow-x: auto; gap: 12px; padding: 10px 5px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+    .field-card { min-width: 85%; scroll-snap-align: start; border-radius: 15px !important; transition: 0.3s; border: 2px solid transparent !important; }
+    .selected-field { border-color: #0d6efd !important; background-color: #f0f7ff !important; box-shadow: 0 4px 12px rgba(13, 110, 253, 0.15) !important; }
     .price-list { font-size: 0.85rem; max-height: 100px; overflow-y: auto; }
-
-    /* تحسين شبكة المربعات (Slots) للموبايل */
-    .slots-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr); /* مربعين في كل صف للموبايل */
-        gap: 10px;
-    }
     
-    /* جعل المودال يظهر من الأسفل في الموبايل */
     @media (max-width: 576px) {
-        .modal.fade .modal-dialog {
-            transform: translate(0, 100%);
-            transition: transform 0.3s ease-out;
-            margin: 0;
-            max-width: 100%;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-        }
+        .modal.fade .modal-dialog { transform: translate(0, 100%); transition: transform 0.3s ease-out; margin: 0; max-width: 100%; position: fixed; bottom: 0; left: 0; right: 0; }
         .modal.show .modal-dialog { transform: translate(0, 0); }
         .modal-content { border-radius: 20px 20px 0 0 !important; }
     }
@@ -98,8 +58,7 @@
         <label class="fw-bold small text-muted mb-2">2. المواعيد المتاحة:</label>
         <div id="slots_container" class="bg-white rounded-4 shadow-sm p-3 min-vh-50">
             <div class="text-center py-5">
-                <i class="fas fa-hand-pointer fa-2x text-muted mb-2 opacity-50"></i>
-                <p class="text-muted small">اسحب الملاعب واختر واحداً لعرض المواعيد</p>
+                <p class="text-muted small">اختر ملعباً لعرض المواعيد</p>
             </div>
         </div>
     </div>
@@ -120,11 +79,11 @@
             <div class="modal-body p-4">
                 <div class="mb-3">
                     <label class="small fw-bold mb-1">اسم الكابتن</label>
-                    <input type="text" name="user_name" class="form-control rounded-3" placeholder="مثلاً: احمد" required>
+                    <input type="text" name="user_name" class="form-control rounded-3" required>
                 </div>
                 <div class="row">
                     <div class="col-6 mb-3">
-                        <label class="small fw-bold mb-1">العربون</label>
+                        <label class="small fw-bold mb-1">العربون (يضاف للخزنة)</label>
                         <input type="number" name="deposit" class="form-control rounded-3" value="0">
                     </div>
                     <div class="col-6 mb-3 d-flex align-items-end">
@@ -157,18 +116,15 @@
                         <label class="small fw-bold mb-1">اسم العميل</label>
                         <input type="text" name="user_name" id="edit_user_name" class="form-control rounded-3" required>
                     </div>
-                    <div class="mb-3">
-                        <label class="small fw-bold mb-1">العربون</label>
-                        <input type="number" name="deposit" id="edit_deposit" class="form-control rounded-3" required>
-                    </div>
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" name="is_constant" id="edit_is_constant">
                         <label class="small fw-bold" for="edit_is_constant">حجز ثابت</label>
                     </div>
+                    <p class="text-muted small">* لتعديل المبالغ، استخدم زر "التحصيل" في لوحة المواعيد.</p>
                 </div>
                 <div class="modal-footer border-0 flex-column gap-2">
                     <button type="submit" class="btn btn-primary w-100 py-2 fw-bold rounded-3">حفظ التعديلات</button>
-                    <button type="button" class="btn btn-outline-danger w-100 py-2 small border-0" onclick="confirmDelete()">إلغاء الحجز</button>
+                    <button type="button" class="btn btn-outline-danger w-100 py-2 small border-0" onclick="confirmDelete()">إلغاء الحجز بالكامل</button>
                 </div>
             </form>
             <form id="deleteForm" method="POST" style="display:none;">@csrf @method('DELETE')</form>
@@ -177,7 +133,6 @@
 </div>
 
 <script>
-    // نفس دوال JavaScript الخاصة بك دون تغيير في المنطق لضمان عمل الـ AJAX
     function selectField(id) {
         document.querySelectorAll('.field-card').forEach(card => {
             card.classList.remove('selected-field');
@@ -195,9 +150,7 @@
         let date = document.getElementById('booking_date').value;
         let container = document.getElementById('slots_container');
         if(!fId || !date) return;
-
-        container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary spinner-border-sm"></div><p class="small text-muted mt-2">جاري التحميل...</p></div>';
-
+        container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
         fetch(`{{ route('admin.getSlots') }}?field_id=${fId}&date=${date}`)
             .then(res => res.text())
             .then(html => container.innerHTML = html);
@@ -211,18 +164,20 @@
         new bootstrap.Modal(document.getElementById('bookingModal')).show();
     }
 
-    function openEditModal(bookingJson) {
-        let booking = JSON.parse(bookingJson);
+    function openEditModal(booking) {
+        if (typeof booking === 'string') booking = JSON.parse(booking);
+        if (!booking) return;
+
         document.getElementById('edit_user_name').value = booking.user_name;
-        document.getElementById('edit_deposit').value = booking.deposit;
         document.getElementById('edit_is_constant').checked = booking.is_constant == 1;
         document.getElementById('edit_display_time_header').innerText = formatAMPM(booking.start_time);
         document.getElementById('updateForm').action = "/admin/bookings/" + booking.id;
+        
         new bootstrap.Modal(document.getElementById('editModal')).show();
     }
 
     function confirmDelete() {
-        if (confirm('إلغاء الحجز؟')) {
+        if (confirm('هل أنت متأكد من إلغاء الحجز؟ سيتم حذف كافة المدفوعات المرتبطة به.')) {
             let form = document.getElementById('deleteForm');
             form.action = document.getElementById('updateForm').action;
             form.submit();
@@ -230,25 +185,17 @@
     }
 
     function formatAMPM(time) {
-        let [h, m] = time.split(':');
+        if (!time) return "--:--";
+        let parts = time.split(':');
+        let h = parts[0];
+        let m = parts[1];
         let ampm = h >= 12 ? 'PM' : 'AM';
         h = h % 12 || 12;
         return h + ':' + m + ' ' + ampm;
     }
 
-    // تحديث البيانات تلقائياً كل دقيقة
-setInterval(function() {
-    // بنشيك لو فيه مودال مفتوح (سواء بتاع الحجز أو التعديل)
-    const isBookingModalOpen = document.getElementById('bookingModal').classList.contains('show');
-    const isEditModalOpen = document.getElementById('editModal').classList.contains('show');
-
-    // لو مفيش أي مودال مفتوح، حدث البيانات براحتك
-    if (!isBookingModalOpen && !isEditModalOpen) {
-        console.log("جاري تحديث المواعيد تلقائياً...");
-        loadSlots(); 
-    } else {
-        console.log("تم إيقاف التحديث التلقائي لأنك تقوم بإدخال بيانات حالياً.");
-    }
-}, 60000); // 60000 مللي ثانية = دقيقة واحدة
+    setInterval(function() {
+        if (!document.querySelector('.modal.show')) loadSlots();
+    }, 60000);
 </script>
 @endsection

@@ -19,4 +19,14 @@ class Booking extends Model
     {
         return $this->belongsTo(Field::class);
     }
+
+    public function payments()
+{
+    return $this->hasMany(Payment::class);
+}
+
+    // دالة سريعة لحساب إجمالي ما تم دفعه لهذا الحجز حتى الآن
+    public function getTotalPaidAttribute() {
+        return $this->payments->sum('amount');
+    }
 }

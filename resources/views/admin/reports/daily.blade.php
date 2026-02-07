@@ -49,11 +49,12 @@
         padding: 10px 15px;
         margin-bottom: 20px;
     }
+    .bg-soft-primary { background-color: #ebf4ff; }
 </style>
 
 <div class="container-fluid py-3 px-3">
     <div class="mb-4">
-        <h4 class="fw-bold mb-1">التقرير المالي</h4>
+        <h4 class="fw-bold mb-1">التقرير المالي (الخزنة)</h4>
         <p class="text-muted small">ليوم: <span class="text-primary fw-bold">{{ $date }}</span></p>
         
         <form action="{{ route('admin.reports.daily') }}" method="GET" class="date-filter shadow-sm d-flex align-items-center">
@@ -69,7 +70,7 @@
                     <div class="icon-box bg-success text-white shadow-sm">
                         <i class="fas fa-wallet"></i>
                     </div>
-                    <div class="amount-label text-success fw-bold">الخزنة (عربون)</div>
+                    <div class="amount-label text-success fw-bold">إجمالي المحصل</div>
                     <div class="amount-value text-dark">{{ number_format($totalDeposit, 0) }} <small>ج</small></div>
                 </div>
             </div>
@@ -80,7 +81,7 @@
                     <div class="icon-box bg-warning text-dark shadow-sm">
                         <i class="fas fa-hand-holding-usd"></i>
                     </div>
-                    <div class="amount-label text-warning fw-bold">المتبقي بره</div>
+                    <div class="amount-label text-warning fw-bold">المتبقي المتوقع</div>
                     <div class="amount-value text-dark">{{ number_format($totalRemaining, 0) }} <small>ج</small></div>
                 </div>
             </div>
@@ -89,7 +90,7 @@
             <div class="card report-card shadow-sm bg-primary text-white">
                 <div class="card-body d-flex justify-content-between align-items-center p-3">
                     <div>
-                        <h6 class="mb-0 fw-bold">إجمالي حجوزات اليوم</h6>
+                        <h6 class="mb-0 fw-bold">عدد عمليات الدفع</h6>
                         <small class="opacity-75">حسب التاريخ المختار</small>
                     </div>
                     <h2 class="mb-0 fw-bold">{{ $bookingsCount }}</h2>
@@ -99,46 +100,45 @@
     </div>
 
     <div class="mb-3 d-flex justify-content-between align-items-center px-1">
-        <label class="fw-bold text-dark">تفاصيل الحجوزات:</label>
-        <span class="badge bg-light text-dark border">{{ $details->count() }} حجز</span>
+        <label class="fw-bold text-dark">تفاصيل حركة الخزنة:</label>
+        <span class="badge bg-light text-dark border">{{ $details->count() }} عملية</span>
     </div>
 
     <div id="booking_list">
-        @forelse($details as $booking)
+        @forelse($details as $payment)
         <div class="booking-item shadow-sm border-0">
             <div class="d-flex justify-content-between align-items-start mb-3">
                 <div>
-                    <span class="field-badge mb-2 d-inline-block">{{ $booking->field->name }}</span>
-                    <h6 class="fw-bold mb-0 text-dark">{{ $booking->user_name }}</h6>
+                    {{-- الوصول لاسم الملعب من خلال علاقة الحجز --}}
+                    <span class="field-badge mb-2 d-inline-block">{{ $payment->booking->field->name ?? 'ملعب ممسوح' }}</span>
+                    {{-- الوصول لاسم المستأجر من خلال علاقة الحجز --}}
+                    <h6 class="fw-bold mb-0 text-dark">{{ $payment->booking->user_name ?? 'مستخدم ممسوح' }}</h6>
                 </div>
                 <div class="text-end">
                     <div class="badge bg-soft-primary text-primary rounded-pill small">
-                        <i class="far fa-clock me-1"></i> {{ \Carbon\Carbon::parse($booking->start_time)->format('g:i A') }}
+                        <i class="far fa-clock me-1"></i> 
+                        {{ $payment->booking ? \Carbon\Carbon::parse($payment->booking->start_time)->format('g:i A') : '--:--' }}
                     </div>
                 </div>
             </div>
             
             <div class="row g-0 border-top pt-2">
                 <div class="col-6 border-end">
-                    <div class="amount-label">العربون</div>
-                    <div class="amount-value text-success">+{{ number_format($booking->deposit, 0) }} ج</div>
+                    <div class="amount-label">المبلغ المدفوع</div>
+                    <div class="amount-value text-success">+{{ number_format($payment->amount, 0) }} ج</div>
                 </div>
                 <div class="col-6 ps-3">
-                    <div class="amount-label">المتبقي</div>
-                    <div class="amount-value text-danger">{{ number_format($booking->remaining, 0) }} ج</div>
+                    <div class="amount-label">نوع الدفعة</div>
+                    <div class="small fw-bold text-muted">{{ $payment->note ?? 'دفع نقدي' }}</div>
                 </div>
             </div>
         </div>
         @empty
         <div class="text-center py-5">
             <i class="fas fa-folder-open fa-3x text-muted mb-3 opacity-20"></i>
-            <p class="text-muted">لا توجد حجوزات مسجلة لهذا اليوم</p>
+            <p class="text-muted">لا توجد حركات مالية مسجلة لهذا اليوم</p>
         </div>
         @endforelse
     </div>
 </div>
-
-<style>
-    .bg-soft-primary { background-color: #ebf4ff; }
-</style>
 @endsection
