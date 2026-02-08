@@ -155,4 +155,35 @@ public function update(Request $request, $id)
 
     return back()->with('success', 'تم تحصيل المبلغ وإضافته لتقرير اليوم!');
 }
+
+// داخل app/Http/Controllers/BookingController.php
+
+public function publicStatus()
+{
+    $fields = \App\Models\Field::with('prices')->get();
+    return view('public_booking_view', compact('fields'));
+}
+
+// app/Http/Controllers/BookingController.php
+
+public function publicSlots(Request $request)
+{
+    $fieldId = $request->field_id;
+    $date = $request->date;
+    $dayOfWeek = \Carbon\Carbon::parse($date)->dayOfWeek;
+
+    $bookings = \App\Models\Booking::where('field_id', $fieldId)
+        ->where(function ($query) use ($date, $dayOfWeek) {
+            $query->where('booking_date', $date)
+                  ->orWhere(function ($q) use ($dayOfWeek) {
+                      $q->where('is_constant', 1)
+                        ->where('day_of_week', $dayOfWeek);
+                  });
+        })
+        ->get()
+        ->keyBy('start_time');
+
+    // هنكريت ملف جديد لليوزر مخصوص
+    return view('partials.public_slots_list', compact('bookings', 'date'))->render();
+}
 }

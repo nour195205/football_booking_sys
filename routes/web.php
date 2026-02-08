@@ -18,9 +18,11 @@ Route::get('/booking', function () {
     $fields = Field::all(); // سحب الملاعب مباشرة من الداتابيز
     return view('fields', compact('fields'));
 })->name('booking');
-
+// روت عرض الملاعب والمواعيد للجمهور
+Route::get('/booking-status', [App\Http\Controllers\BookingController::class, 'publicStatus'])->name('public.status');
 // روت خاص بجلب المربعات لليوزر والآدمن (AJAX)
 Route::get('/get-slots-html', [App\Http\Controllers\BookingController::class, 'getSlotsHtml'])->name('get.slots.html');
+Route::get('/public-slots', [App\Http\Controllers\BookingController::class, 'publicSlots']);
 
 // روتات الضيوف (Guest)
 Route::middleware('guest')->group(function () {
