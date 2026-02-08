@@ -114,23 +114,45 @@ class BookingController extends Controller
     }
 }
 
-public function update(Request $request, $id)
-{
-    $request->validate([
-        'user_name' => 'required|string',
-        'deposit' => 'required|numeric|min:0',
-    ]);
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'user_name' => 'required|string',
+            'deposit' => 'required|numeric|min:0',
+        ]);
 
-    $booking = \App\Models\Booking::findOrFail($id);
-    
-    $booking->update([
-        'user_name' => $request->user_name,
-        'deposit' => $request->deposit,
-        'is_constant' => $request->has('is_constant') ? 1 : 0,
-    ]);
+        $booking = \App\Models\Booking::findOrFail($id);
+        
+        $booking->update([
+            'user_name' => $request->user_name,
+            'deposit' => $request->deposit,
+            'is_constant' => $request->has('is_constant') ? 1 : 0,
+        ]);
 
-    return back()->with('success', 'تم تحديث بيانات الحجز بنجاح');
-}
+        // تحديث سجل المدفوعات (العربون)
+        // بنحاول نلاقي الدفعة اللي كانت "عربون"
+        $payment = \App\Models\Payment::where('booking_id', $booking->id)
+                    ->where('note', 'like', '%عربون%')
+                    ->first();
+
+        if ($payment) {
+            $payment->update([
+                'amount' => $request->deposit
+            ]);
+        } else {
+            // لو مكنش فيه عربون قبل كدة ودلوقتي ضاف عربون
+            if ($request->deposit > 0) {
+                 \App\Models\Payment::create([
+                    'booking_id'   => $booking->id,
+                    'amount'       => $request->deposit,
+                    'paid_at'      => $booking->created_at, // بنسجله بتاريخ إنشاء الحجز عشان الانتظام المالي
+                    'note'         => 'عربون حجز (تعديل) لموعد بتاريخ: ' . $booking->booking_date,
+                ]);
+            }
+        }
+
+        return back()->with('success', 'تم تحديث بيانات الحجز والعربون بنجاح');
+    }
     // حذف/إلغاء حجز
     public function destroy($id)
     {

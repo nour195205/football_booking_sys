@@ -53,10 +53,10 @@
                             @endif
                             
                             <div class="d-flex justify-content-around align-items-center">
-                                {{-- <button type="button" class="btn btn-link btn-sm text-white p-0" 
+                                <button type="button" class="btn btn-link btn-sm text-white p-0" 
                                         onclick='openEditModal({!! json_encode($booking) !!})'>
                                     <i class="fas fa-edit"></i> <small>تعديل</small>
-                                </button> --}}
+                                </button>
                                 
                                 <button type="button" class="btn btn-link btn-sm text-white p-0" 
                                         onclick="if(confirm('إلغاء الحجز؟')) { document.getElementById('delete-form-{{$booking->id}}').submit(); }">

@@ -112,10 +112,17 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <div class="mb-3">
-                        <label class="small fw-bold mb-1">اسم العميل</label>
-                        <input type="text" name="user_name" id="edit_user_name" class="form-control rounded-3" required>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="small fw-bold mb-1">اسم العميل</label>
+                            <input type="text" name="user_name" id="edit_user_name" class="form-control rounded-3" required>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="small fw-bold mb-1">تعديل العربون</label>
+                            <input type="number" name="deposit" id="edit_deposit" class="form-control rounded-3" value="0">
+                        </div>
                     </div>
+
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" name="is_constant" id="edit_is_constant">
                         <label class="small fw-bold" for="edit_is_constant">حجز ثابت</label>
@@ -169,6 +176,7 @@
         if (!booking) return;
 
         document.getElementById('edit_user_name').value = booking.user_name;
+        document.getElementById('edit_deposit').value = booking.deposit || 0;
         document.getElementById('edit_is_constant').checked = booking.is_constant == 1;
         document.getElementById('edit_display_time_header').innerText = formatAMPM(booking.start_time);
         document.getElementById('updateForm').action = "/admin/bookings/" + booking.id;
