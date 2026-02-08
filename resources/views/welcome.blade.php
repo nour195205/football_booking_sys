@@ -57,7 +57,7 @@
     <h2 class="fw-bold mb-2">أهلاً بك في كابتن حجز</h2>
     <p class="text-muted mb-5 px-3">من فضلك اختر كيف تود المتابعة اليوم؟</p>
 
-    <a href="{{ route('booking') }}" class="choice-card shadow-sm border-0">
+    <a href="{{ route('public.status') }}" class="choice-card shadow-sm border-0">
         <div class="icon-circle bg-primary text-white">
             <i class="fas fa-calendar-check"></i>
         </div>

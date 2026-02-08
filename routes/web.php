@@ -14,10 +14,7 @@ Route::get('/', function () {
 
 
 
-Route::get('/booking', function () {
-    $fields = Field::all(); // سحب الملاعب مباشرة من الداتابيز
-    return view('fields', compact('fields'));
-})->name('booking');
+
 // روت عرض الملاعب والمواعيد للجمهور
 Route::get('/booking-status', [App\Http\Controllers\BookingController::class, 'publicStatus'])->name('public.status');
 // روت خاص بجلب المربعات لليوزر والآدمن (AJAX)
