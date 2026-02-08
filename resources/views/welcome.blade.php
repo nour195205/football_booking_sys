@@ -64,15 +64,24 @@
         <h5 class="fw-bold text-dark">أنا لاعب / مشجع</h5>
         <p class="small text-muted mb-0">الدخول لصفحة حجز المواعيد ومعاينة الملاعب المتاحة</p>
     </a>
-
-    <a href="{{ route('login') }}" class="choice-card shadow-sm border-0">
-        <div class="icon-circle bg-dark text-white">
+    @auth
+    <a href="{{ route('admin.dashboard') }}" class="choice-card shadow-sm border-0">
+    <div class="icon-circle bg-dark text-white">
             <i class="fas fa-user-shield"></i>
         </div>
         <h5 class="fw-bold text-dark">لوحة الإدارة</h5>
         <p class="small text-muted mb-0">تسجيل الدخول للموظفين والآدمن لإدارة الحجوزات والتقارير</p>
     </a>
-
+    @else
+    <a href="{{ route('login') }}" class="choice-card shadow-sm border-0">
+    <div class="icon-circle bg-dark text-white">
+            <i class="fas fa-user-shield"></i>
+        </div>
+        <h5 class="fw-bold text-dark">لوحة الإدارة</h5>
+        <p class="small text-muted mb-0">تسجيل الدخول للموظفين والآدمن لإدارة الحجوزات والتقارير</p>
+    </a>
+    @endauth
+        
     <div class="mt-4">
         <small class="text-muted">© {{ date('Y') }} نظام كابتن حجز المتكامل</small>
     </div>

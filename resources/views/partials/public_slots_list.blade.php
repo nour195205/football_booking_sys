@@ -52,4 +52,31 @@
     
     .user-name { font-size: 1.8rem; font-weight: 800; color: #1a202c; }
     .tap-text { font-size: 1.4rem; color: #718096; font-weight: 600; }
+
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+        .public-slots-list { gap: 10px; }
+        .slot-card {
+            padding: 15px 20px;
+            min-height: auto;
+            border-radius: 15px;
+            border-left-width: 8px !important;
+        }
+        
+        .time-part {
+            font-size: 1.2rem;
+            min-width: auto;
+            gap: 8px;
+        }
+        
+        .info-part { gap: 10px; }
+        
+        .status-badge {
+            font-size: 0.9rem;
+            padding: 5px 15px;
+        }
+        
+        .user-name { font-size: 1rem; }
+        .tap-text { font-size: 0.9rem; }
+    }
 </style>
